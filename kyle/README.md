@@ -41,13 +41,20 @@ Once upstream ships one of our patches, the merge absorbs it; no extra step.
 `services/kaneo/docker-compose.yaml` in `~/source/docker_deployments` builds the
 `kaneo` service from `https://github.com/KyleJFischer/kaneo.git#kyle`.
 
+Run every `docker compose` command from the repo root. `services/kaneo` is pulled
+in with `include:`, and the root compose file defines its network and variables,
+so running Compose from that folder fails with `refers to undefined network internal`.
+
+One step at a time, checking each before the next:
+
 ```sh
 ssh dockerhost
 cd ~/source/docker_deployments
+docker tag kaneo-kyle:latest kaneo-kyle:previous     # rollback point
+docker compose build kaneo                           # Kaneo keeps running
 docker exec kaneo-postgres pg_dump -U kaneo kaneo | gzip > ~/backups/kaneo/kaneo-pre-$(date +%Y%m%dT%H%M%S).sql.gz
-docker tag kaneo-kyle:latest kaneo-kyle:previous
-docker compose build kaneo
-docker compose up -d --no-deps kaneo
+chmod 600 ~/backups/kaneo/*.sql.gz                   # the dump holds password hashes
+docker compose up -d --no-deps kaneo                 # a few seconds of downtime
 ```
 
 Verify that it actually works, not just that the container is up: `/api/health` returns ok, and global
