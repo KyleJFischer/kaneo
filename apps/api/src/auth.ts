@@ -82,6 +82,7 @@ import {
   hasRegisteredUsers,
   promoteInitialAdministrator,
 } from "./utils/instance-bootstrap";
+import { isApiKeyRateLimitDisabled } from "./utils/is-api-key-rate-limit-disabled";
 import { isCloud } from "./utils/is-cloud";
 import { isDisposableEmail } from "./utils/is-disposable-email";
 import { isLocalSignInPath } from "./utils/is-local-sign-in-path";
@@ -686,7 +687,7 @@ export const auth = betterAuth({
       enableSessionForAPIKeys: true,
       apiKeyHeaders: "x-api-key",
       rateLimit: {
-        enabled: true,
+        enabled: !isApiKeyRateLimitDisabled(),
         maxRequests: 100,
         timeWindow: 60 * 1000,
       },
