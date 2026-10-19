@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { type ApiKeyUsageRow, evaluateApiKeyUsage } from "./api-key-usage";
 
 const now = new Date("2026-01-01T00:00:00.000Z");
@@ -120,5 +120,36 @@ describe("evaluateApiKeyUsage", () => {
       requestCount: 7,
       rateLimit: null,
     });
+  });
+});
+
+describe("evaluateApiKeyUsage with DISABLE_API_KEY_RATE_LIMIT", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("lets a full window through when the instance disables rate limiting", () => {
+    vi.stubEnv("DISABLE_API_KEY_RATE_LIMIT", "true");
+    expect(evaluateApiKeyUsage(row({ requestCount: 5 }), now, true)).toEqual({
+      status: "valid",
+      remaining: null,
+      lastRefillAt: null,
+      requestCount: 5,
+      rateLimit: null,
+    });
+  });
+
+  it("still enforces the usage quota when rate limiting is disabled", () => {
+    vi.stubEnv("DISABLE_API_KEY_RATE_LIMIT", "true");
+    expect(evaluateApiKeyUsage(row({ remaining: 0 }), now, true)).toMatchObject(
+      { status: "usage_exceeded", rateLimit: null },
+    );
+  });
+
+  it("keeps rate limiting for any other value", () => {
+    vi.stubEnv("DISABLE_API_KEY_RATE_LIMIT", "false");
+    expect(
+      evaluateApiKeyUsage(row({ requestCount: 5 }), now, true),
+    ).toMatchObject({ status: "rate_limited", limit: 5 });
   });
 });

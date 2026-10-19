@@ -270,6 +270,10 @@ API reporting is opt-in. Leave `SENTRY_DSN` unset to disable it.
 
 The browser reads `VITE_SENTRY_DSN` when it is built. The current web container renderer does not replace `KANEO_SENTRY_DSN` at startup, so setting that variable on a running container does not enable browser reporting.
 
+## API key rate limit
+
+Each API key allows 100 requests per minute by default. Set `DISABLE_API_KEY_RATE_LIMIT=true` to turn that limit off for every key on the instance, for example when automation makes bursts of requests. Usage quotas on a key still apply.
+
 ## Cloud mode
 
 `KANEO_CLOUD=true` enables hosted-service behavior, including cloud billing and additional signup and invitation restrictions. Leave it unset for a normal self-hosted instance. CAPTCHA is controlled by `TURNSTILE_SECRET_KEY` independently of this flag.

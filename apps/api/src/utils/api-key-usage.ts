@@ -1,5 +1,6 @@
 import type { apikeyTable } from "../database/schema";
 import type { ApiKeyDenial, ApiKeyRateLimit } from "./rate-limit-headers";
+import { isApiKeyRateLimitDisabled } from "./is-api-key-rate-limit-disabled";
 
 export type ApiKeyUsageRow = Pick<
   typeof apikeyTable.$inferSelect,
@@ -65,7 +66,10 @@ export function evaluateApiKeyUsage(
     lastRefillAt = now;
   }
 
-  const window = apiKey.rateLimitEnabled ? currentWindow(apiKey, now) : null;
+  const window =
+    apiKey.rateLimitEnabled && !isApiKeyRateLimitDisabled()
+      ? currentWindow(apiKey, now)
+      : null;
 
   if (remaining !== null && remaining <= 0)
     return {
